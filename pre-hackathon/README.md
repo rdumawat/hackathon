@@ -70,7 +70,8 @@ Files: `index.html`, `styles.css`, `app.js` (questions, round flow, scoring), `a
 
 **Explicitly out of scope**
 
-- Reading requirements of any kind.
+- Any requirement to read words. Numerals are a different matter: level one shows them beside
+  countable groups, and level two depends on recognising them — that is the skill it teaches.
 - Accounts, sign-in, or user profiles.
 - Internet access or any runtime network dependency.
 - Advertisements.
