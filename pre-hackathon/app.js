@@ -185,19 +185,16 @@
 
   // Laid out like addition — two groups either side of the operator — so the two kinds of
   // question read the same way. Left is everything you start with, right is how many go.
-  // The ones that leave are marked in the left group and fade once the prompt has been
-  // read, which is what shows the child that taking away means fewer than you began with.
+  //
+  // Nothing fades. The left group used to dim the departing objects, which acted the
+  // subtraction out but also left exactly `answer` objects still solid on screen: the
+  // child could count those instead of working it out, the same way the dots under the
+  // answer buttons let them skip the arithmetic. Do not reintroduce it.
   function takeBody(q) {
-    var whole = '<div class="objects" style="--cols:' + cols(q.n) + '">';
-    for (var i = 0; i < q.n; i++) {
-      whole += '<span class="obj' + (i >= q.n - q.m ? ' leaving' : '') + '">' + q.theme.emoji + '</span>';
-    }
-    whole += '</div>';
-
     return '<div class="groups" style="--obj:' + objectSize(cols(q.n) + cols(q.m)) + '">' +
-      '<div class="group">' + whole + '</div>' +
+      '<div class="group">' + objectsHTML(q.n, q.theme.emoji) + '</div>' +
       '<div class="op">➖</div>' +
-      '<div class="group taken">' + objectsHTML(q.m, q.theme.emoji) + '</div>' +
+      '<div class="group">' + objectsHTML(q.m, q.theme.emoji) + '</div>' +
     '</div>';
   }
 
@@ -248,15 +245,6 @@
     speak(promptFor(q), null, function () {
       if (me !== gen) return;
       if (clockAt === null) clockAt = Date.now();
-
-      // Take the objects away only once the child has heard what is being taken.
-      // Fading them while the sentence is still playing acts out the answer before
-      // the question has finished being asked.
-      if (q.type === 'take') {
-        later(function () {
-          Array.prototype.forEach.call(root.querySelectorAll('.obj.leaving'), function (o) { o.classList.add('gone'); });
-        }, 350);
-      }
     });
 
     var buttons = root.querySelectorAll('.choice');

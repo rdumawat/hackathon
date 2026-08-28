@@ -48,21 +48,23 @@ spec.
   set by timing a round at a child's pace: counting ten objects takes about seven seconds, and
   a 5s top band made every question score 3, so the score could not respond to playing better.
 - The scoring clock starts when the spoken prompt **finishes**, via the `onDone` callback
-  `speak()` takes — and the take-away fade hangs off the same callback, so items never vanish
-  before the child has heard what is being taken. `onDone` must fire exactly once even when
-  speech is unavailable. Its word-count estimate is only a floor: real speech runs slower than
-  any estimate, so once it expires `speak()` polls `speechSynthesis.speaking` and waits for the
-  engine to actually stop. Shortening that to a plain timer re-breaks both the clock and the fade.
+  `speak()` takes, so listening to the question never costs stars. `onDone` must fire exactly
+  once even when speech is unavailable. Its word-count estimate is only a floor: real speech runs
+  slower than any estimate, so once it expires `speak()` polls `speechSynthesis.speaking` and
+  waits for the engine to actually stop. Shortening that to a plain timer re-breaks the clock.
+- **Nothing on a question screen animates away.** Take Away used to dim the departing objects.
+  That acted the subtraction out, but it also left exactly `answer` objects still solid on
+  screen — the child could count those instead of subtracting, exactly like the dots under the
+  answer buttons. Both groups are now drawn identically and stay put; the ➖ carries the meaning.
 - Object groups use a fixed `--cols` grid, never free wrapping: up to four in a row, larger
   groups split into two balanced rows. Free wrapping made "8 + 2" render as 6, 2 and 2, with the
   operator beside the wrong cluster. `--obj` sizes art by the **widest row**, not the total, and
   `.groups` is `nowrap` so the two groups can never stack.
 - **Both question types render the same shape**: group, operator badge, group. Take Away shows
-  everything you start with on the left (with the departing ones marked `leaving`, fading after
-  the prompt) and how many go on the right, so subtraction is stated as `n ➖ m` rather than
-  silently deleting from one pile. The `.op` badge exists because the heavy-minus glyph is a thin
-  bar beside a bold cross for plus, and that symbol is the only cue telling a non-reading child
-  which kind of question this is.
+  everything you start with on the left and how many go on the right, so subtraction is stated as
+  `n ➖ m` rather than silently deleting from one pile. The `.op` badge exists because the
+  heavy-minus glyph is a thin bar beside a bold cross for plus, and that symbol is the only cue
+  telling a non-reading child which kind of question this is.
 - Timers belong to the screen that started them: `later()` registers them and every render calls
   `clearTimers()`. Bare `setTimeout` here will fire over whatever screen comes next.
 - No network calls, no accounts, no ads, no personal data. Progress is a star count in

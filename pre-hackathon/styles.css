@@ -89,12 +89,7 @@ html, body {
   gap: 8px 10px;
   align-items: center; justify-items: center;
 }
-.obj {
-  font-size: var(--obj, min(11vw, 76px)); line-height: 1;
-  transition: transform .15s ease, opacity .5s ease;
-}
-.obj.leaving { opacity: 1; }
-.obj.leaving.gone { opacity: .12; transform: scale(.5) translateY(-20px); }
+.obj { font-size: var(--obj, min(11vw, 76px)); line-height: 1; }
 
 /* ---- add / take-away layout ---- */
 /* nowrap: the two addend groups must never stack, or the operator ends up beside
@@ -116,8 +111,6 @@ html, body {
   font-size: min(10vw, 52px); line-height: 1;
   background: var(--bg); border-radius: 50%;
 }
-/* the amount being taken away — present, but clearly not part of what is left */
-.group.taken { opacity: .82; }
 
 /* ---- answer choices ---- */
 .choices { display: flex; gap: 20px; flex-wrap: wrap; align-items: stretch; justify-content: center; }
