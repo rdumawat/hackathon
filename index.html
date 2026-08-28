@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Count &amp; Play</title>
+  <!-- The app lives in pre-hackathon/. This sends the short repo-root URL there,
+       so the address is thumb-typeable on a tablet. Meta refresh first so it
+       still works with JavaScript disabled; the link is the last resort. -->
+  <meta http-equiv="refresh" content="0; url=pre-hackathon/index.html" />
+  <link rel="canonical" href="pre-hackathon/index.html" />
+  <style>
+    html, body {
+      height: 100%; margin: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: #fff7e6; color: #3b2f0b;
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+    a { font-size: 24px; font-weight: 700; color: #3b2f0b; }
+  </style>
+</head>
+<body>
+  <a href="pre-hackathon/index.html">Count &amp; Play →</a>
+  <script>
+    // replace() so the Back button skips this page instead of bouncing back into it
+    location.replace('pre-hackathon/index.html');
+  </script>
+</body>
+</html>
