@@ -11,8 +11,6 @@
   var BIG_MAX = 99;         // level two: two digits against one
   var HUNDREDS_MIN = 101;   // level three: over a hundred, under two hundred
   var HUNDREDS_MAX = 199;
-  var PAIR_MIN = 10;        // level four: two digits on both sides
-  var PAIR_MAX = 99;
   var ROUND = 10;           // questions per round
   var PROMOTE = 40;         // round score that moves the child up a level
 
@@ -72,9 +70,12 @@
   function loadLevel() {
     try {
       var n = parseInt(localStorage.getItem(LEVEL_KEY), 10);
-      // Anything outside the ladder — corrupt, or written by a future build — starts over
-      // at one rather than selecting a level that does not exist.
-      return (n >= 1 && n <= TOP_LEVEL) ? n : 1;
+      if (!(n >= 1)) return 1;              // missing or unreadable
+      // A number above the ladder means the child cleared a level that has since been
+      // withdrawn. Play the top of the current ladder rather than sending them back to
+      // the start — but deliberately do NOT write the smaller number back: if that level
+      // returns, they should have it again without re-earning something they already did.
+      return Math.min(n, TOP_LEVEL);
     } catch (e) { return 1; }
   }
   function saveLevel(n) { try { localStorage.setItem(LEVEL_KEY, String(n)); } catch (e) {} }
@@ -254,23 +255,6 @@
     return { type: 'take', theme: pick(THEMES), n: n, m: m, answer: n - m };
   }
 
-  // ---- level four: two digits against two digits --------------------------
-  // The last rung. Both sides are two digits, so this is the first level where the
-  // child carries and borrows across a whole column rather than nudging the ones.
-  // Addition tops out at 198 on its own. Subtraction takes no more than there is, so
-  // it cannot go negative; a small or zero answer here is fine, as at level two.
-  function makeAddPair() {
-    var a = randInt(PAIR_MIN, PAIR_MAX);
-    var b = randInt(PAIR_MIN, PAIR_MAX);
-    return { type: 'add', theme: pick(THEMES), a: a, b: b, answer: a + b };
-  }
-
-  function makeTakeAwayPair() {
-    var n = randInt(PAIR_MIN, PAIR_MAX);
-    var m = randInt(PAIR_MIN, n);
-    return { type: 'take', theme: pick(THEMES), n: n, m: m, answer: n - m };
-  }
-
   // Written as numerals, both sides. Shared by every level past the first.
   function bigBody(q) {
     var lead  = q.type === 'add' ? q.a : q.n;
@@ -289,8 +273,7 @@
     null,                                                                        // no level zero
     { ceiling: MAX,          add: makeAdd,          take: makeTakeAway,          numerals: false },
     { ceiling: BIG_MAX,      add: makeAddBig,       take: makeTakeAwayBig,       numerals: true  },
-    { ceiling: HUNDREDS_MAX, add: makeAddHundreds,  take: makeTakeAwayHundreds,  numerals: true  },
-    { ceiling: PAIR_MAX * 2, add: makeAddPair,      take: makeTakeAwayPair,      numerals: true  }
+    { ceiling: HUNDREDS_MAX, add: makeAddHundreds,  take: makeTakeAwayHundreds,  numerals: true  }
   ];
   var TOP_LEVEL = LEVELS.length - 1;
 
@@ -373,9 +356,11 @@
     clearTimers(); gen++;
     var best = ROUND * BEST_PER_QUESTION;   // the most a perfect round can be worth
     // Scoring PROMOTE moves the child up a rung, and they stay there — across reloads
-    // too. At the top of the ladder there is nowhere further to go.
+    // too. At the top of the ladder there is nowhere further to go, so the same score
+    // earns the trophy instead: they have done the whole game.
     var promoted = (level < TOP_LEVEL && roundStars >= PROMOTE);
     if (promoted) { level += 1; saveLevel(level); }
+    var mastered = (!promoted && level === TOP_LEVEL && roundStars >= PROMOTE);
 
     root.innerHTML =
       topbar(ROUND) +
@@ -386,13 +371,16 @@
           '<span class="of-sep">/</span>' +
           '<span class="of-max">' + best + '</span>' +
         '</div>' +
-        (promoted ? '<div class="promoted"><span class="promo-ico">🎉</span><span class="promo-num">' + level + '</span></div>' : '') +
+        // A four-year-old cannot read "You did it all", so the screen says it with a
+        // trophy and the voice says it out loud.
+        (promoted  ? '<div class="promoted"><span class="promo-ico">🎉</span><span class="promo-num">' + level + '</span></div>' :
+         mastered  ? '<div class="mastered"><span class="promo-ico">🏆</span></div>' : '') +
         '<button class="big-start" data-action="again">▶️</button>' +
       '</div>';
     confetti();
-    speak(promoted
-      ? 'You got ' + roundStars + ' stars! You unlocked level ' + level + '. Bigger numbers!'
-      : 'You got ' + roundStars + ' stars, out of ' + best + '!');
+    speak(promoted ? 'You got ' + roundStars + ' stars! You unlocked level ' + level + '. Bigger numbers!'
+        : mastered ? 'You got ' + roundStars + ' stars! You did it all!'
+                   : 'You got ' + roundStars + ' stars, out of ' + best + '!');
     root.querySelector('.big-start').addEventListener('click', function () { SFX.pop(); startRound(); });
   }
 

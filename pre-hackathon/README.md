@@ -26,12 +26,12 @@ decode; numerals only take over at level two, once the child has earned their wa
 - **Stars for getting it right, not for being quick.** 5 stars answered right first time, 3 on
   the second try, 0 after that — so a round is worth up to 50. Nothing is timed: a clock would
   punish the careful counting the game is trying to teach.
-- **Four levels, each earned.** Level one is 0–10 with everything drawn as objects to count.
+- **Three levels, each earned.** Level one is 0–10 with everything drawn as objects to count.
   Scoring 40 or more in a round moves you up, and a level once cleared stays unlocked.
   **Level two** is a two-digit number against a one-digit one, written as numerals — the point at
   which numbers stop being piles to count and become symbols to read. **Level three** is that same
-  shape from 101 to 199. **Level four** puts two digits on both sides, so it is the first that
-  asks the child to carry and borrow across a whole column. Four is the last rung for now.
+  shape from 101 to 199, and is the last rung for now: scoring 40 there earns a trophy, and the
+  voice says "You did it all!"
 - **Quantities are grouped, never scattered.** Up to four objects sit in a row; larger groups
   split into two balanced rows, so each side of a sum reads as one block.
 - **Whole, non-negative numbers only.** Level one runs 0 to 10; the higher levels reach 199. None can produce a negative answer.
@@ -66,11 +66,11 @@ Files: `index.html`, `styles.css`, `app.js` (questions, round flow, scoring), `a
 **In scope**
 
 - A ten-question round mixing Add and Take Away, scored on how many tries each takes.
-- Whole non-negative numbers: 0–10 at level one, then 99, 199 and 198 as the levels climb.
+- Whole non-negative numbers: 0–10 at level one, up to 99 at level two, up to 199 at level three.
 - Subtraction limited to problems with a result of zero or greater.
 - Spoken instructions, gentle sound effects, positive feedback.
 - Large touch targets and countable, colorful on-screen objects.
-- A per-round star score, and four levels, each permanently unlocked by scoring 40 or more.
+- A per-round star score, and three levels, each permanently unlocked by scoring 40 or more.
 
 **Explicitly out of scope**
 
@@ -80,7 +80,7 @@ Files: `index.html`, `styles.css`, `app.js` (questions, round flow, scoring), `a
 - Internet access or any runtime network dependency.
 - Advertisements.
 - Collection of personal data.
-- Multiplication, division, negative numbers, and numbers beyond 199. Level four is the last for now.
+- Multiplication, division, negative numbers, and numbers beyond 199.
 
 ## Getting started
 

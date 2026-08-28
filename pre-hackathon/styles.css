@@ -97,6 +97,14 @@ html, body {
 }
 .promo-ico { font-size: min(10vw, 56px); line-height: 1; }
 .promo-num { font-size: min(14vw, 76px); font-weight: 800; line-height: 1; }
+/* the top of the ladder: nothing left to unlock, so the trophy says so */
+.mastered {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--yellow);
+  border-radius: 50%; padding: 16px 18px; box-shadow: var(--shadow);
+  animation: pop .5s ease;
+}
+.mastered .promo-ico { font-size: min(16vw, 92px); }
 
 /* ---- problem objects ---- */
 /* A group is a fixed grid — at most five to a row, set per group as --cols — so it
