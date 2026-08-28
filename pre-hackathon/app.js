@@ -7,10 +7,12 @@
 (function () {
   'use strict';
 
-  var MAX = 10;      // level one: everything is countable, so 0..10
-  var BIG_MAX = 99;  // level two: the written side stays inside two digits
-  var ROUND = 10;    // questions per round
-  var PROMOTE = 40;  // round score that unlocks level two
+  var MAX = 10;             // level one: everything is countable, so 0..10
+  var BIG_MAX = 99;         // level two: two digits against one
+  var HUNDREDS_MIN = 101;   // level three: over a hundred, under two hundred
+  var HUNDREDS_MAX = 199;
+  var ROUND = 10;           // questions per round
+  var PROMOTE = 40;         // round score that moves the child up a level
 
   var root = document.getElementById('app');
   var confettiLayer = document.getElementById('confetti');
@@ -66,7 +68,12 @@
   // because the tablet went to sleep. It is a single number and nothing about the child.
   var LEVEL_KEY = 'countplay.level';
   function loadLevel() {
-    try { return parseInt(localStorage.getItem(LEVEL_KEY), 10) === 2 ? 2 : 1; } catch (e) { return 1; }
+    try {
+      var n = parseInt(localStorage.getItem(LEVEL_KEY), 10);
+      // Anything outside the ladder — corrupt, or written by a future build — starts over
+      // at one rather than selecting a level that does not exist.
+      return (n >= 1 && n <= TOP_LEVEL) ? n : 1;
+    } catch (e) { return 1; }
   }
   function saveLevel(n) { try { localStorage.setItem(LEVEL_KEY, String(n)); } catch (e) {} }
   // Older builds kept a lifetime star total. Nothing reads it now, so clear it rather
@@ -229,6 +236,23 @@
     return { type: 'take', theme: pick(THEMES), n: n, m: m, answer: n - m };
   }
 
+  // ---- level three: over a hundred, against a single digit ----------------
+  // Answers stay two or three digits and under two hundred. Addition has to be capped
+  // to hold that; subtraction gets it for free, since a number past a hundred minus a
+  // single digit cannot fall below 92.
+  function makeAddHundreds() {
+    var b = randInt(1, 9);
+    var a = randInt(HUNDREDS_MIN, HUNDREDS_MAX - b);   // keep the total under two hundred
+    return { type: 'add', theme: pick(THEMES), a: a, b: b, answer: a + b };
+  }
+
+  function makeTakeAwayHundreds() {
+    var n = randInt(HUNDREDS_MIN, HUNDREDS_MAX);
+    var m = randInt(1, 9);
+    return { type: 'take', theme: pick(THEMES), n: n, m: m, answer: n - m };
+  }
+
+  // Written as numerals, both sides. Shared by every level past the first.
   function bigBody(q) {
     var lead  = q.type === 'add' ? q.a : q.n;
     var small = q.type === 'add' ? q.b : q.m;
@@ -238,6 +262,17 @@
       '<div class="group big-num">' + small + '</div>' +
     '</div>';
   }
+
+  // The ladder. `ceiling` bounds the wrong answers as well as the right one, and
+  // `numerals` says whether quantities are drawn as countable objects or written out.
+  // Adding a level four means adding a row here and nothing else.
+  var LEVELS = [
+    null,                                                                        // no level zero
+    { ceiling: MAX,          add: makeAdd,          take: makeTakeAway,          numerals: false },
+    { ceiling: BIG_MAX,      add: makeAddBig,       take: makeTakeAwayBig,       numerals: true  },
+    { ceiling: HUNDREDS_MAX, add: makeAddHundreds,  take: makeTakeAwayHundreds,  numerals: true  }
+  ];
+  var TOP_LEVEL = LEVELS.length - 1;
 
   function promptFor(q) {
     return q.type === 'add'
@@ -270,18 +305,15 @@
   function renderQuestion() {
     clearTimers();
     var me = ++gen;
-    var isAdd = randInt(0, 1) === 1;
-    var q = level === 2
-      ? (isAdd ? makeAddBig() : makeTakeAwayBig())
-      : (isAdd ? makeAdd() : makeTakeAway());
-    var ceiling = level === 2 ? BIG_MAX : MAX;
+    var cfg = LEVELS[level];
+    var q = randInt(0, 1) ? cfg.add() : cfg.take();
     var attempts = 0;     // taps so far; the first correct one is scored by this
 
     root.innerHTML =
       topbar(roundIndex) +
       '<div class="screen play problem">' +
-        (level === 2 ? bigBody(q) : (q.type === 'add' ? addBody(q) : takeBody(q))) +
-        choicesHTML(q.answer, ceiling) +
+        (cfg.numerals ? bigBody(q) : (q.type === 'add' ? addBody(q) : takeBody(q))) +
+        choicesHTML(q.answer, cfg.ceiling) +
       '</div>';
 
     speak(promptFor(q));
@@ -320,9 +352,10 @@
   function renderResults() {
     clearTimers(); gen++;
     var best = ROUND * BEST_PER_QUESTION;   // the most a perfect round can be worth
-    // Scoring PROMOTE moves the child up, and they stay there — across reloads too.
-    var promoted = (level === 1 && roundStars >= PROMOTE);
-    if (promoted) { level = 2; saveLevel(2); }
+    // Scoring PROMOTE moves the child up a rung, and they stay there — across reloads
+    // too. At the top of the ladder there is nowhere further to go.
+    var promoted = (level < TOP_LEVEL && roundStars >= PROMOTE);
+    if (promoted) { level += 1; saveLevel(level); }
 
     root.innerHTML =
       topbar(ROUND) +
@@ -333,12 +366,12 @@
           '<span class="of-sep">/</span>' +
           '<span class="of-max">' + best + '</span>' +
         '</div>' +
-        (promoted ? '<div class="promoted"><span class="promo-ico">🎉</span><span class="promo-num">2</span></div>' : '') +
+        (promoted ? '<div class="promoted"><span class="promo-ico">🎉</span><span class="promo-num">' + level + '</span></div>' : '') +
         '<button class="big-start" data-action="again">▶️</button>' +
       '</div>';
     confetti();
     speak(promoted
-      ? 'You got ' + roundStars + ' stars! You unlocked level 2. Bigger numbers!'
+      ? 'You got ' + roundStars + ' stars! You unlocked level ' + level + '. Bigger numbers!'
       : 'You got ' + roundStars + ' stars, out of ' + best + '!');
     root.querySelector('.big-start').addEventListener('click', function () { SFX.pop(); startRound(); });
   }

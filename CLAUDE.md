@@ -42,13 +42,22 @@ spec.
   **numerals on both sides** — nobody can count eighty-seven of anything, so this is where
   numbers stop being piles to count and become symbols to read. Addition keeps the sum inside
   two digits (`a` is drawn from `10..BIG_MAX - b`); subtraction cannot go negative for free,
-  because a two-digit number always exceeds a one-digit one. The two-digit side is always first.
-- Scoring **40 or more** in a round (`PROMOTE`) moves the child to level two **permanently** —
-  it is stored under `countplay.level` and survives a reload, because clearing level one is an
-  achievement and a child should not have to earn it again because the tablet went to sleep.
-  There is no way back down. The level is the **only** thing persisted; the star badge is
-  deliberately per-round (see below), and the obsolete `countplay.stars` key from older builds
-  is cleared on load.
+  because a two-digit number always exceeds a one-digit one. The big side is always first.
+  A **single-digit answer here is fine and intended** (`15 ➖ 6 = 9`) — do not "fix" it.
+- **Level three** (`HUNDREDS_MIN`..`HUNDREDS_MAX` = 101..199) is that same shape one decade up:
+  numerals both sides, big side first. Answers stay **two or three digits and under 200**.
+  Addition needs the cap (`a` from `101..199 - b`); subtraction gets it free, since a number
+  past a hundred less a single digit cannot fall below 92.
+- **`LEVELS` is the ladder** — one row per level giving its answer `ceiling`, its two question
+  makers, and whether quantities are drawn as objects or written as `numerals`. `renderQuestion`
+  and `renderResults` read it rather than branching on the level number. Adding a level four
+  means adding a row and nothing else; `TOP_LEVEL` follows from the array length.
+- Scoring **40 or more** in a round (`PROMOTE`) moves the child up one rung **permanently** —
+  stored under `countplay.level`, surviving a reload, because clearing a level is an achievement
+  and should not have to be earned again because the tablet went to sleep. There is no way back
+  down, and no promotion past `TOP_LEVEL`. `loadLevel()` clamps anything outside `1..TOP_LEVEL`
+  back to 1. The level is the **only** thing persisted; the star badge is deliberately per-round
+  (see below), and the obsolete `countplay.stars` key from older builds is cleared on load.
 - Nothing requires reading: every prompt is spoken, and round position is drawn as pips rather
   than "3 of 10". Answer buttons show the numeral only — they used to carry a row of dots too,
   but that let a child count the objects on screen and match the button with the same number of
