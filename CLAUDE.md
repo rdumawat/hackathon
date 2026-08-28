@@ -34,10 +34,17 @@ spec.
 
 **Constraints that must hold when editing `app.js`** — these are product requirements:
 
-- Whole non-negative numbers only, range 0..10 (`MAX`).
-- Addition keeps `a + b <= MAX` so the total stays countable on screen; both addends are at
-  least 1, so the child always sees two real groups to join.
-- Subtraction draws the amount removed as `1..n`, so **the answer is never negative**.
+- Whole non-negative numbers only. **The answer is never negative, at either level.**
+- **Level one** (`MAX` = 10) draws both sides as countable groups of objects. Addition keeps
+  `a + b <= MAX` so the total stays countable on screen, and both addends are at least 1 so the
+  child always sees two real groups to join. Subtraction draws the amount removed as `1..n`.
+- **Level two** (`BIG_MAX` = 99) is a two-digit number against a one-digit one, written as
+  **numerals on both sides** — nobody can count eighty-seven of anything, so this is where
+  numbers stop being piles to count and become symbols to read. Addition keeps the sum inside
+  two digits (`a` is drawn from `10..BIG_MAX - b`); subtraction cannot go negative for free,
+  because a two-digit number always exceeds a one-digit one. The two-digit side is always first.
+- Scoring **40 or more** in a round (`PROMOTE`) moves the child to level two, for the rest of
+  that visit — nothing is stored, so a reload starts them at level one again.
 - Nothing requires reading: every prompt is spoken, and round position is drawn as pips rather
   than "3 of 10". Answer buttons show the numeral only — they used to carry a row of dots too,
   but that let a child count the objects on screen and match the button with the same number of

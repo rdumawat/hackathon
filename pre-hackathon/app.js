@@ -1,13 +1,16 @@
 // app.js — Count & Play. One round is ten spoken questions, mixing Add and Take Away.
-// No reading required: every question is spoken and the quantities are shown as objects
-// to count. Numbers stay whole and 0..10, and subtraction never goes below zero.
-// The faster a question is answered correctly, the more stars it earns.
+// Level one shows quantities as objects to count (0..10); scoring 40 in a round opens
+// level two, a two-digit number against a one-digit one, written as numerals. Neither
+// level can produce a negative answer. A question is worth 5 stars answered right first
+// time, 3 on the second try, 0 after that. Nothing is timed and nothing is stored.
 
 (function () {
   'use strict';
 
-  var MAX = 10;    // number range: 0..10
-  var ROUND = 10;  // questions per round
+  var MAX = 10;      // level one: everything is countable, so 0..10
+  var BIG_MAX = 99;  // level two: the written side stays inside two digits
+  var ROUND = 10;    // questions per round
+  var PROMOTE = 40;  // round score that unlocks level two
 
   var root = document.getElementById('app');
   var confettiLayer = document.getElementById('confetti');
@@ -51,16 +54,18 @@
   function later(fn, ms) { var id = setTimeout(fn, ms); timers.push(id); return id; }
   function clearTimers() { timers.forEach(clearTimeout); timers = []; }
 
-  // ---- progress (this visit only, nothing stored) -------------------------
-  // The badge is a tally for the session, not a lifetime score: it starts at zero on
-  // every load. A number that only ever climbs stops meaning anything to a child.
-  var stars = 0;
+  // ---- progress (this round only, nothing stored) -------------------------
+  // The badge shows the round in progress and starts at zero every round — including
+  // the first level-two round. So it reads as "how close am I to the 40 that opens the
+  // next level", rather than a number that only ever climbs and stops meaning anything.
+  // Fall short of PROMOTE and the next attempt starts from zero again.
+  var roundStars = 0;
 
   function awardStars(n) {
     if (n <= 0) return;
-    stars += n; SFX.star();
+    roundStars += n; SFX.star();
     var badge = document.querySelector('.star-count');
-    if (badge) { badge.textContent = stars; badge.classList.remove('bump'); void badge.offsetWidth; badge.classList.add('bump'); }
+    if (badge) { badge.textContent = roundStars; badge.classList.remove('bump'); void badge.offsetWidth; badge.classList.add('bump'); }
   }
 
   // ---- shared UI pieces ---------------------------------------------------
@@ -72,7 +77,8 @@
     }
     pips += '</div>';
     return '<div class="topbar">' + pips +
-      '<div class="stars"><span class="star-ico">⭐</span><span class="star-count">' + stars + '</span></div>' +
+      '<div class="level-badge" aria-label="Level ' + level + '">' + level + '</div>' +
+      '<div class="stars"><span class="star-ico">⭐</span><span class="star-count">' + roundStars + '</span></div>' +
     '</div>';
   }
 
@@ -101,19 +107,19 @@
     return s + '</div>';
   }
 
-  // Two wrong answers near the correct one, all within 0..MAX.
-  function distractors(correct, howMany) {
+  // Two wrong answers near the correct one, all within 0..ceiling.
+  function distractors(correct, howMany, ceiling) {
     var seen = {}; seen[correct] = true; var pool = [];
-    for (var d = 1; d <= MAX && pool.length < howMany + 2; d++) {
+    for (var d = 1; d <= ceiling && pool.length < howMany + 2; d++) {
       [correct - d, correct + d].forEach(function (x) {
-        if (x >= 0 && x <= MAX && !seen[x]) { seen[x] = true; pool.push(x); }
+        if (x >= 0 && x <= ceiling && !seen[x]) { seen[x] = true; pool.push(x); }
       });
     }
     return shuffle(pool).slice(0, howMany);
   }
 
-  function choicesHTML(correct) {
-    var opts = shuffle([correct].concat(distractors(correct, 2)));
+  function choicesHTML(correct, ceiling) {
+    var opts = shuffle([correct].concat(distractors(correct, 2, ceiling)));
     var s = '<div class="choices">';
     opts.forEach(function (v) {
       s += '<button class="choice" data-val="' + v + '"><span class="numeral">' + v + '</span></button>';
@@ -192,6 +198,35 @@
     '</div>';
   }
 
+  // ---- level two: a two-digit number against a one-digit number -----------
+  // Both sides are written as numerals. Nobody can count eighty-seven of anything, so
+  // level two is where numbers stop being piles to count and become symbols to read —
+  // the skill level one's countable groups were building towards. The shape stays the
+  // same as level one: value, operator, value. Answers stay inside two digits, and
+  // subtraction cannot go negative because a two-digit number always exceeds a
+  // one-digit one.
+  function makeAddBig() {
+    var b = randInt(1, 9);
+    var a = randInt(10, BIG_MAX - b);        // keep the total inside two digits
+    return { type: 'add', theme: pick(THEMES), a: a, b: b, answer: a + b };
+  }
+
+  function makeTakeAwayBig() {
+    var n = randInt(10, BIG_MAX);
+    var m = randInt(1, 9);
+    return { type: 'take', theme: pick(THEMES), n: n, m: m, answer: n - m };
+  }
+
+  function bigBody(q) {
+    var lead  = q.type === 'add' ? q.a : q.n;
+    var small = q.type === 'add' ? q.b : q.m;
+    return '<div class="groups">' +
+      '<div class="group big-num">' + lead + '</div>' +
+      '<div class="op">' + (q.type === 'add' ? '➕' : '➖') + '</div>' +
+      '<div class="group big-num">' + small + '</div>' +
+    '</div>';
+  }
+
   function promptFor(q) {
     return q.type === 'add'
       ? q.a + ' and ' + q.b + ' more. How many all together?'
@@ -202,8 +237,8 @@
   //  SCREENS
   // ===========================================================================
   var roundIndex = 0;   // questions finished so far this round
-  var roundStars = 0;   // stars earned this round
   var gen = 0;          // guards callbacks belonging to a question we have left
+  var level = 1;        // 2 once a round has scored PROMOTE; lasts for this visit only
 
   function renderStart() {
     clearTimers(); gen++;
@@ -223,14 +258,18 @@
   function renderQuestion() {
     clearTimers();
     var me = ++gen;
-    var q = randInt(0, 1) ? makeAdd() : makeTakeAway();
+    var isAdd = randInt(0, 1) === 1;
+    var q = level === 2
+      ? (isAdd ? makeAddBig() : makeTakeAwayBig())
+      : (isAdd ? makeAdd() : makeTakeAway());
+    var ceiling = level === 2 ? BIG_MAX : MAX;
     var attempts = 0;     // taps so far; the first correct one is scored by this
 
     root.innerHTML =
       topbar(roundIndex) +
       '<div class="screen play problem">' +
-        (q.type === 'add' ? addBody(q) : takeBody(q)) +
-        choicesHTML(q.answer) +
+        (level === 2 ? bigBody(q) : (q.type === 'add' ? addBody(q) : takeBody(q))) +
+        choicesHTML(q.answer, ceiling) +
       '</div>';
 
     speak(promptFor(q));
@@ -250,7 +289,6 @@
         }
 
         var earned = starsForAttempt(attempts);
-        roundStars += earned;
         Array.prototype.forEach.call(buttons, function (b) { b.classList.add('done'); b.disabled = true; });
         btn.classList.add('correct');
         SFX.success(); speak(pick(PRAISE)); confetti(); awardStars(earned);
@@ -270,6 +308,10 @@
   function renderResults() {
     clearTimers(); gen++;
     var best = ROUND * BEST_PER_QUESTION;   // the most a perfect round can be worth
+    // Scoring PROMOTE moves the child up, and they stay there for the rest of the visit.
+    var promoted = (level === 1 && roundStars >= PROMOTE);
+    if (promoted) level = 2;
+
     root.innerHTML =
       topbar(ROUND) +
       '<div class="screen results">' +
@@ -279,10 +321,13 @@
           '<span class="of-sep">/</span>' +
           '<span class="of-max">' + best + '</span>' +
         '</div>' +
+        (promoted ? '<div class="promoted"><span class="promo-ico">🎉</span><span class="promo-num">2</span></div>' : '') +
         '<button class="big-start" data-action="again">▶️</button>' +
       '</div>';
     confetti();
-    speak('You got ' + roundStars + ' stars, out of ' + best + '!');
+    speak(promoted
+      ? 'You got ' + roundStars + ' stars! You unlocked level 2. Bigger numbers!'
+      : 'You got ' + roundStars + ' stars, out of ' + best + '!');
     root.querySelector('.big-start').addEventListener('click', function () { SFX.pop(); startRound(); });
   }
 

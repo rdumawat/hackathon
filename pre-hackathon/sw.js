@@ -5,7 +5,7 @@
 // the very first time: a fix could not reach the child's tablet without clearing website
 // data by hand. Network-first keeps the app current while still running with no network
 // at all, because a failed — or merely slow — fetch falls straight back to the cache.
-const CACHE = 'count-play-v9';
+const CACHE = 'count-play-v10';
 const NET_TIMEOUT = 3000;   // beyond this, assume no usable network and use the cache
 const ASSETS = [
   './',
