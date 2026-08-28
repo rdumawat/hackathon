@@ -23,9 +23,13 @@ decode.
 
 - **One button to start.** No menus to choose between — ▶️ begins a round of ten questions, and
   the round ends on a score screen with ▶️ to play again.
-- **Stars for speed.** A correct answer is worth 5 stars under five seconds, 3 stars under ten,
-  and 1 star after that — so a round is worth up to 50. The clock only starts once the question
-  has finished being read aloud, so listening never costs anything.
+- **Stars for speed.** A correct answer is worth 5 stars under seven seconds, 3 stars under ten,
+  and 1 star after that — so a round is worth up to 50. Seven seconds is about how long it takes
+  to count ten objects, so the top band is reachable by counting rather than only by guessing.
+  The clock only starts once the question has finished being read aloud, so listening never
+  costs anything.
+- **Quantities are grouped, never scattered.** Up to four objects sit in a row; larger groups
+  split into two balanced rows, so each side of a sum reads as one block.
 - **Whole, non-negative numbers only.** Numbers run 0 to 10 to start.
 - **No negative results, ever.** Subtraction problems are generated so the answer is always zero or
   greater — the app never poses a question whose answer it cannot show as objects on the screen.

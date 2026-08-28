@@ -40,12 +40,21 @@ spec.
 - Subtraction draws the amount removed as `0..n`, so **the answer is never negative**.
 - Nothing requires reading: every prompt is spoken, answer buttons show dots as well as digits,
   and round position is drawn as pips rather than "3 of 10".
-- A round is `ROUND` (10) questions. Stars come from `BANDS`: under 5s → 5, under 10s → 3,
+- A round is `ROUND` (10) questions. Stars come from `BANDS`: under 7s → 5, under 10s → 3,
   slower → 1. A question answered wrongly at any point is worth 0, but the child keeps trying
-  until it is right — wrong answers must never end a question or block progress.
+  until it is right — wrong answers must never end a question or block progress. The bands were
+  set by timing a round at a child's pace: counting ten objects takes about seven seconds, and
+  a 5s top band made every question score 3, so the score could not respond to playing better.
 - The scoring clock starts when the spoken prompt **finishes**, via the `onDone` callback
-  `speak()` takes. Listening to the question must never cost stars, so `onDone` has to fire
-  exactly once even when speech is unavailable or the browser never reports the end.
+  `speak()` takes — and the take-away fade hangs off the same callback, so items never vanish
+  before the child has heard what is being taken. `onDone` must fire exactly once even when
+  speech is unavailable. Its word-count estimate is only a floor: real speech runs slower than
+  any estimate, so once it expires `speak()` polls `speechSynthesis.speaking` and waits for the
+  engine to actually stop. Shortening that to a plain timer re-breaks both the clock and the fade.
+- Object groups use a fixed `--cols` grid, never free wrapping: up to four in a row, larger
+  groups split into two balanced rows. Free wrapping made "8 + 2" render as 6, 2 and 2, with the
+  operator beside the wrong cluster. `--obj` sizes art by the **widest row**, not the total, and
+  `.groups` is `nowrap` so the two addend groups can never stack.
 - Timers belong to the screen that started them: `later()` registers them and every render calls
   `clearTimers()`. Bare `setTimeout` here will fire over whatever screen comes next.
 - No network calls, no accounts, no ads, no personal data. Progress is a star count in

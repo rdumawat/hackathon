@@ -25,10 +25,12 @@
   var PRAISE = ['Yes!','Great job!','You did it!','Awesome!','Well done!','Hooray!','Perfect!'];
   var RETRY  = ['Try again!','Almost! Try again.','Give it another go!','So close! Try again.'];
 
-  // Speed bands, five seconds wide each. A correct answer is always worth at least
-  // one star; zero is reserved for a question the child first answered wrongly.
+  // Speed bands. Seven seconds is roughly how long it takes a four-year-old to count
+  // ten objects, so the top band is reachable by counting rather than only by guessing.
+  // A correct answer is always worth at least one star; zero is reserved for a question
+  // the child first answered wrongly.
   var BANDS = [
-    { under: 5000,  stars: 5 },
+    { under: 7000,  stars: 5 },
     { under: 10000, stars: 3 }
   ];
   var SLOW_STARS = 1;
@@ -80,8 +82,27 @@
     '</div>';
   }
 
+  // Up to four sit in one row; beyond that a group splits into two balanced rows
+  // (7 becomes 4+3, 10 becomes 5+5). Fixing the column count is what stops a group
+  // free-wrapping into something a child could read as two separate groups, and
+  // balancing the rows keeps a single object from being orphaned under a long one.
+  function cols(count) {
+    count = Math.max(1, count);
+    return count <= 4 ? count : Math.ceil(count / 2);
+  }
+
+  // Size by how many objects sit on the WIDEST ROW, not by the total: a take-away of
+  // ten is only five across (two rows) and can be drawn large, while 5 + 5 really is
+  // ten across and has to shrink or it overflows the card.
+  function objectSize(widestRow) {
+    if (widestRow <= 4) return 'min(15vw, 96px)';
+    if (widestRow <= 6) return 'min(11vw, 76px)';
+    if (widestRow <= 8) return 'min(8.5vw, 62px)';
+    return 'min(6.5vw, 48px)';
+  }
+
   function objectsHTML(count, emoji, extraClass) {
-    var s = '<div class="objects ' + (extraClass || '') + '">';
+    var s = '<div class="objects ' + (extraClass || '') + '" style="--cols:' + cols(count) + '">';
     for (var i = 0; i < count; i++) s += '<span class="obj">' + emoji + '</span>';
     return s + '</div>';
   }
@@ -160,7 +181,7 @@
   }
 
   function addBody(q) {
-    return '<div class="groups">' +
+    return '<div class="groups" style="--obj:' + objectSize(cols(q.a) + cols(q.b)) + '">' +
       '<div class="group">' + objectsHTML(q.a, q.theme.emoji) + '</div>' +
       '<div class="op">➕</div>' +
       '<div class="group">' + objectsHTML(q.b, q.theme.emoji) + '</div>' +
@@ -168,10 +189,11 @@
   }
 
   function takeBody(q) {
-    var s = '<div class="objects">';
+    var s = '<div class="objects" style="--cols:' + cols(q.n) + '">';
     for (var i = 0; i < q.n; i++) s += '<span class="obj' + (i >= q.n - q.m ? ' leaving' : '') + '">' + q.theme.emoji + '</span>';
     s += '</div>';
-    return '<div class="groups single"><div class="group">' + s + '</div></div>';
+    return '<div class="groups single" style="--obj:' + objectSize(cols(q.n)) + '">' +
+      '<div class="group">' + s + '</div></div>';
   }
 
   function promptFor(q) {
@@ -219,14 +241,18 @@
     // The clock starts once the question has been read out, so listening to it never
     // costs the child stars. audio.js calls back even when speech is unavailable.
     speak(promptFor(q), null, function () {
-      if (me === gen && clockAt === null) clockAt = Date.now();
-    });
+      if (me !== gen) return;
+      if (clockAt === null) clockAt = Date.now();
 
-    if (q.type === 'take') {
-      later(function () {
-        Array.prototype.forEach.call(root.querySelectorAll('.obj.leaving'), function (o) { o.classList.add('gone'); });
-      }, 900);
-    }
+      // Take the objects away only once the child has heard what is being taken.
+      // Fading them while the sentence is still playing acts out the answer before
+      // the question has finished being asked.
+      if (q.type === 'take') {
+        later(function () {
+          Array.prototype.forEach.call(root.querySelectorAll('.obj.leaving'), function (o) { o.classList.add('gone'); });
+        }, 350);
+      }
+    });
 
     var buttons = root.querySelectorAll('.choice');
     Array.prototype.forEach.call(buttons, function (btn) {

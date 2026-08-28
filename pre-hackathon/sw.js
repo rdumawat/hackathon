@@ -1,6 +1,6 @@
 // Simple offline-first service worker. Caches the whole app shell on install
 // and serves cache-first so the app runs with no network at all.
-const CACHE = 'count-play-v3';
+const CACHE = 'count-play-v4';
 const ASSETS = [
   './',
   './index.html',

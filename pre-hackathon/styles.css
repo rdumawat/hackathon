@@ -81,35 +81,28 @@ html, body {
 .of-max { font-size: min(12vw, 68px); opacity: .55; }
 
 /* ---- problem objects ---- */
+/* A group is a fixed grid — at most five to a row, set per group as --cols — so it
+   always reads as one block. Free-wrapping made "8 + 2" look like "6 + 2 + 2". */
 .objects {
-  display: flex; flex-wrap: wrap; gap: 14px;
-  align-items: center; justify-content: center; max-width: 92vw;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 5), auto);
+  gap: 8px 10px;
+  align-items: center; justify-items: center;
 }
 .obj {
-  font-size: min(15vw, 92px); line-height: 1; position: relative;
+  font-size: var(--obj, min(11vw, 76px)); line-height: 1;
   transition: transform .15s ease, opacity .5s ease;
-}
-.countable .obj { cursor: pointer; opacity: .55; transform: scale(.92); }
-.countable .obj.counted { opacity: 1; transform: scale(1.05); }
-.obj:active { transform: scale(.9); }
-.num-badge {
-  position: absolute; top: -10px; right: -10px;
-  min-width: 34px; height: 34px; padding: 0 6px;
-  background: var(--purple); color: #fff; border-radius: 50%;
-  font-size: 22px; display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 0 rgba(0,0,0,.2);
 }
 .obj.leaving { opacity: 1; }
 .obj.leaving.gone { opacity: .12; transform: scale(.5) translateY(-20px); }
 
-.prompt-ico { font-size: 56px; animation: nudge 1.2s ease-in-out infinite; }
-@keyframes nudge { 0%,100%{transform:translateY(0)} 50%{transform:translateY(8px)} }
-
 /* ---- add / take-away layout ---- */
+/* nowrap: the two addend groups must never stack, or the operator ends up beside
+   the wrong one. Both groups fit across because --obj shrinks as the total grows. */
 .groups {
   display: flex; align-items: center; justify-content: center;
-  flex-wrap: wrap; gap: 16px; min-height: 34vh;
-  background: #fff; border-radius: 32px; padding: 18px 22px;
+  flex-wrap: nowrap; gap: 22px; min-height: 34vh;
+  background: #fff; border-radius: 32px; padding: 18px 26px;
   box-shadow: var(--shadow); max-width: 94vw;
 }
 .groups.single { min-height: 30vh; }

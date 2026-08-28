@@ -82,9 +82,22 @@ window.speak = (function () {
     var called = false;
     function finish() { if (!called) { called = true; if (onDone) onDone(); } }
 
+    // The estimate is only a floor: real speech at rate 0.92 runs slower than any
+    // word count predicts, so once it expires we wait for the engine to actually stop
+    // talking. If speech never started (unavailable, muted, no voices) it is not
+    // speaking, and the estimate stands. The cap keeps a wedged engine from hanging.
     var words = String(text).split(/\s+/).length;
     var estimate = Math.min(6000, Math.max(900, words * 380));
-    var fallback = setTimeout(finish, estimate);
+    var waited = 0;
+    var fallback = setTimeout(function poll() {
+      var talking = ('speechSynthesis' in window) && window.speechSynthesis.speaking;
+      if (talking && waited < 15000) {
+        waited += 150;
+        fallback = setTimeout(poll, 150);
+        return;
+      }
+      finish();
+    }, estimate);
 
     if (!('speechSynthesis' in window)) return;   // the fallback still calls back
     try {
