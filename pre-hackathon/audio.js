@@ -57,6 +57,7 @@ window.SFX = (function () {
 
 // ---- Spoken instructions -------------------------------------------------
 window.speak = (function () {
+  var RATE = 0.8;   // 1 is the voice's normal pace; lower is slower
   var voices = [];
   function load() {
     voices = ('speechSynthesis' in window) ? window.speechSynthesis.getVoices() : [];
@@ -136,7 +137,10 @@ window.speak = (function () {
     try {
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
-      u.rate = opts.rate != null ? opts.rate : 0.92;   // a touch slow, easy to follow
+      // Unhurried: a four-year-old is holding two numbers in their head while the
+      // sentence plays. Reading slowly costs nothing, because the scoring clock does
+      // not start until the sentence has finished.
+      u.rate = opts.rate != null ? opts.rate : RATE;
       u.pitch = opts.pitch != null ? opts.pitch : 1.2; // friendly, bright
       u.volume = 1;
       var v = pick();
