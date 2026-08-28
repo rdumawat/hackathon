@@ -38,8 +38,10 @@ spec.
 - Addition keeps `a + b <= MAX` so the total stays countable on screen; both addends are at
   least 1, so the child always sees two real groups to join.
 - Subtraction draws the amount removed as `0..n`, so **the answer is never negative**.
-- Nothing requires reading: every prompt is spoken, answer buttons show dots as well as digits,
-  and round position is drawn as pips rather than "3 of 10".
+- Nothing requires reading: every prompt is spoken, and round position is drawn as pips rather
+  than "3 of 10". Answer buttons show the numeral only — they used to carry a row of dots too,
+  but that let a child count the objects on screen and match the button with the same number of
+  dots without doing the arithmetic. Do not put them back.
 - A round is `ROUND` (10) questions. Stars come from `BANDS`: under 7s → 5, under 10s → 3,
   slower → 1. A question answered wrongly at any point is worth 0, but the child keeps trying
   until it is right — wrong answers must never end a question or block progress. The bands were

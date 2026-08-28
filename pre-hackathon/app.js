@@ -1,7 +1,7 @@
 // app.js — Count & Play. One round is ten spoken questions, mixing Add and Take Away.
-// No reading required: every question is spoken and every answer button shows countable
-// dots as well as a numeral. Numbers stay whole and 0..10, and subtraction never goes
-// below zero. The faster a question is answered correctly, the more stars it earns.
+// No reading required: every question is spoken and the quantities are shown as objects
+// to count. Numbers stay whole and 0..10, and subtraction never goes below zero.
+// The faster a question is answered correctly, the more stars it earns.
 
 (function () {
   'use strict';
@@ -107,13 +107,6 @@
     return s + '</div>';
   }
 
-  function dotsHTML(k) {
-    if (k <= 0) return '<span class="dots empty"></span>';
-    var s = '<span class="dots">';
-    for (var i = 0; i < k; i++) s += '<i></i>';
-    return s + '</span>';
-  }
-
   // Two wrong answers near the correct one, all within 0..MAX.
   function distractors(correct, howMany) {
     var seen = {}; seen[correct] = true; var pool = [];
@@ -129,7 +122,7 @@
     var opts = shuffle([correct].concat(distractors(correct, 2)));
     var s = '<div class="choices">';
     opts.forEach(function (v) {
-      s += '<button class="choice" data-val="' + v + '"><span class="numeral">' + v + '</span>' + dotsHTML(v) + '</button>';
+      s += '<button class="choice" data-val="' + v + '"><span class="numeral">' + v + '</span></button>';
     });
     return s + '</div>';
   }
