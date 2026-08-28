@@ -11,6 +11,8 @@
   var BIG_MAX = 99;         // level two: two digits against one
   var HUNDREDS_MIN = 101;   // level three: over a hundred, under two hundred
   var HUNDREDS_MAX = 199;
+  var PAIR_MIN = 10;        // level four: two digits on both sides
+  var PAIR_MAX = 99;
   var ROUND = 10;           // questions per round
   var PROMOTE = 40;         // round score that moves the child up a level
 
@@ -252,6 +254,23 @@
     return { type: 'take', theme: pick(THEMES), n: n, m: m, answer: n - m };
   }
 
+  // ---- level four: two digits against two digits --------------------------
+  // The last rung. Both sides are two digits, so this is the first level where the
+  // child carries and borrows across a whole column rather than nudging the ones.
+  // Addition tops out at 198 on its own. Subtraction takes no more than there is, so
+  // it cannot go negative; a small or zero answer here is fine, as at level two.
+  function makeAddPair() {
+    var a = randInt(PAIR_MIN, PAIR_MAX);
+    var b = randInt(PAIR_MIN, PAIR_MAX);
+    return { type: 'add', theme: pick(THEMES), a: a, b: b, answer: a + b };
+  }
+
+  function makeTakeAwayPair() {
+    var n = randInt(PAIR_MIN, PAIR_MAX);
+    var m = randInt(PAIR_MIN, n);
+    return { type: 'take', theme: pick(THEMES), n: n, m: m, answer: n - m };
+  }
+
   // Written as numerals, both sides. Shared by every level past the first.
   function bigBody(q) {
     var lead  = q.type === 'add' ? q.a : q.n;
@@ -270,7 +289,8 @@
     null,                                                                        // no level zero
     { ceiling: MAX,          add: makeAdd,          take: makeTakeAway,          numerals: false },
     { ceiling: BIG_MAX,      add: makeAddBig,       take: makeTakeAwayBig,       numerals: true  },
-    { ceiling: HUNDREDS_MAX, add: makeAddHundreds,  take: makeTakeAwayHundreds,  numerals: true  }
+    { ceiling: HUNDREDS_MAX, add: makeAddHundreds,  take: makeTakeAwayHundreds,  numerals: true  },
+    { ceiling: PAIR_MAX * 2, add: makeAddPair,      take: makeTakeAwayPair,      numerals: true  }
   ];
   var TOP_LEVEL = LEVELS.length - 1;
 

@@ -48,9 +48,13 @@ spec.
   numerals both sides, big side first. Answers stay **two or three digits and under 200**.
   Addition needs the cap (`a` from `101..199 - b`); subtraction gets it free, since a number
   past a hundred less a single digit cannot fall below 92.
+- **Level four** (`PAIR_MIN`..`PAIR_MAX` = 10..99 on **both** sides) is the last rung for now, and
+  the first that asks the child to carry and borrow across a whole column rather than nudging the
+  ones. Addition tops out at 198 unaided; subtraction draws `m` from `PAIR_MIN..n`, so it cannot go
+  negative, and a small or zero answer is fine here as at level two.
 - **`LEVELS` is the ladder** — one row per level giving its answer `ceiling`, its two question
   makers, and whether quantities are drawn as objects or written as `numerals`. `renderQuestion`
-  and `renderResults` read it rather than branching on the level number. Adding a level four
+  and `renderResults` read it rather than branching on the level number. Adding a level five
   means adding a row and nothing else; `TOP_LEVEL` follows from the array length.
 - Scoring **40 or more** in a round (`PROMOTE`) moves the child up one rung **permanently** —
   stored under `countplay.level`, surviving a reload, because clearing a level is an achievement
