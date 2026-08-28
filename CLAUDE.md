@@ -77,9 +77,9 @@ spec.
 - Remote `origin` is `https://github.com/rdumawat/hackathon.git` (private).
 - Default branch is `main`. The remote branch does not exist yet, so the **first** push must
   establish tracking: `git push -u origin main`. Subsequent pushes are plain `git push`.
-- Commit identity is set **repo-locally**, not globally (`rdumawat <rdumawat@remax.com>`). There
-  is no global `.gitconfig` on this machine — a newly cloned repo elsewhere will have no identity
-  and will refuse to commit until one is set.
+- Commit identity is set **repo-locally**, not globally. There is no global `.gitconfig` on this
+  machine — a newly cloned repo elsewhere will have no identity and will refuse to commit until
+  one is set.
 
 ## Gotchas
 
