@@ -65,14 +65,35 @@ window.speak = (function () {
     load();
     window.speechSynthesis.onvoiceschanged = load;
   }
+  // Whatever voice the device is set to use wins. That is the whole point: install a
+  // better voice in system settings — on iOS, Settings > Accessibility > Spoken Content
+  // > Voices, where the Enhanced and Premium downloads sound far more human — and the
+  // app picks it up with no code change. The name list below is only a fallback for
+  // when nothing is flagged as the default.
+  //
+  // Network-backed voices are skipped whenever a local one exists. Chrome's "Google"
+  // voices report localService false and need the internet to speak, which would break
+  // the offline promise the rest of the app is built around.
   function pick() {
     if (!voices.length) load();
-    var prefs = ['samantha', 'google us english', 'aria', 'zira', 'karen', 'moira', 'female'];
+
+    var pool = voices.filter(function (x) { return x.lang && /^en[-_]/i.test(x.lang); });
+    if (!pool.length) pool = voices;
+    var local = pool.filter(function (x) { return x.localService !== false; });
+    if (local.length) pool = local;
+    if (!pool.length) return null;
+
+    var chosen = pool.filter(function (x) { return x.default; })[0];
+    if (chosen) return chosen;
+
+    var prefs = ['samantha', 'ava', 'allison', 'susan', 'karen', 'moira', 'zira', 'aria', 'female'];
     for (var i = 0; i < prefs.length; i++) {
-      var v = voices.find(function (x) { return x.name && x.name.toLowerCase().indexOf(prefs[i]) !== -1; });
+      var v = pool.filter(function (x) {
+        return x.name && x.name.toLowerCase().indexOf(prefs[i]) !== -1;
+      })[0];
       if (v) return v;
     }
-    return voices.find(function (x) { return /^en[-_]/i.test(x.lang); }) || voices[0];
+    return pool[0];
   }
   // onDone fires when the sentence has been read out — or, if speech is missing,
   // muted, or the browser simply never reports the end, after a length-based
