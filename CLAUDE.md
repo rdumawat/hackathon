@@ -42,16 +42,19 @@ spec.
   than "3 of 10". Answer buttons show the numeral only — they used to carry a row of dots too,
   but that let a child count the objects on screen and match the button with the same number of
   dots without doing the arithmetic. Do not put them back.
-- A round is `ROUND` (10) questions. Stars come from `BANDS`: under 7s → 5, under 10s → 3,
-  slower → 1. A question answered wrongly at any point is worth 0, but the child keeps trying
-  until it is right — wrong answers must never end a question or block progress. The bands were
-  set by timing a round at a child's pace: counting ten objects takes about seven seconds, and
-  a 5s top band made every question score 3, so the score could not respond to playing better.
-- The scoring clock starts when the spoken prompt **finishes**, via the `onDone` callback
-  `speak()` takes, so listening to the question never costs stars. `onDone` must fire exactly
-  once even when speech is unavailable. Its word-count estimate is only a floor: real speech runs
-  slower than any estimate, so once it expires `speak()` polls `speechSynthesis.speaking` and
-  waits for the engine to actually stop. Shortening that to a plain timer re-breaks the clock.
+- A round is `ROUND` (10) questions. Stars come from **how many tries a question took**, via
+  `STARS_BY_ATTEMPT`: right first time → 5, right on the second try → 3, anything later → 0.
+  A round is therefore worth up to 50. The child always keeps trying until it is right — wrong
+  answers must never end a question or block progress — but each wrong choice is disabled as it
+  is tapped, so a double tap cannot burn a second attempt.
+- **Scoring is not timed, and must not become timed again.** It used to score on how fast the
+  answer came. Timing a round at a child's pace showed why that fails: counting ten objects takes
+  about seven seconds, so every question landed in the same band and the score could not respond
+  to playing better. Timing also punishes the careful counting the game exists to teach.
+- `speak()` still takes an `onDone` callback (it fires once even when speech is unavailable, and
+  polls `speechSynthesis.speaking` rather than trusting its word-count estimate). Nothing uses it
+  now that scoring is untimed; it is kept because it is the only reliable "speech has finished"
+  signal, which pacing work would need.
 - **Nothing on a question screen animates away.** Take Away used to dim the departing objects.
   That acted the subtraction out, but it also left exactly `answer` objects still solid on
   screen — the child could count those instead of subtracting, exactly like the dots under the
@@ -67,8 +70,9 @@ spec.
   telling a non-reading child which kind of question this is.
 - Timers belong to the screen that started them: `later()` registers them and every render calls
   `clearTimers()`. Bare `setTimeout` here will fire over whatever screen comes next.
-- No network calls, no accounts, no ads, no personal data. Progress is a star count in
-  `localStorage` under `countplay.stars`.
+- No network calls, no accounts, no ads, no personal data. **Nothing is stored at all** — the
+  star badge is a tally for the current visit and starts at zero on every load, because a number
+  that only ever climbs stops meaning anything to a child. `localStorage` is no longer written.
 
 ## Environment
 

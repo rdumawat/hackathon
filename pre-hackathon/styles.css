@@ -125,7 +125,10 @@ html, body {
 .choice:active { transform: translateY(4px); }
 .choice .numeral { font-size: min(14vw, 76px); font-weight: 800; line-height: 1; }
 .choice.correct { background: var(--green); animation: pop .4s ease; }
-.choice.wrong { animation: shake .4s ease; }
+/* A wrong choice is retired rather than left live: it shakes once, then sits there
+   visibly spent, so a second tap cannot cost another attempt and the buttons still
+   standing are the ones worth trying. */
+.choice.wrong { animation: shake .4s ease; opacity: .4; background: #f1e7e7; }
 .choice.done { opacity: .6; }
 @keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(1.15)} 100%{transform:scale(1)} }
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-10px)} 75%{transform:translateX(10px)} }

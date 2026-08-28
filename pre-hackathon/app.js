@@ -25,19 +25,14 @@
   var PRAISE = ['Yes!','Great job!','You did it!','Awesome!','Well done!','Hooray!','Perfect!'];
   var RETRY  = ['Try again!','Almost! Try again.','Give it another go!','So close! Try again.'];
 
-  // Speed bands. Seven seconds is roughly how long it takes a four-year-old to count
-  // ten objects, so the top band is reachable by counting rather than only by guessing.
-  // A correct answer is always worth at least one star; zero is reserved for a question
-  // the child first answered wrongly.
-  var BANDS = [
-    { under: 7000,  stars: 5 },
-    { under: 10000, stars: 3 }
-  ];
-  var SLOW_STARS = 1;
+  // Stars come from how many tries a question took, not from how fast it was answered.
+  // Timing punished a child for counting carefully, which is the thing the game is for.
+  // Index is the attempt number, so first try is 5, second is 3, and anything after is 0.
+  var STARS_BY_ATTEMPT = [5, 3];
+  var BEST_PER_QUESTION = STARS_BY_ATTEMPT[0];
 
-  function starsFor(ms) {
-    for (var i = 0; i < BANDS.length; i++) { if (ms < BANDS[i].under) return BANDS[i].stars; }
-    return SLOW_STARS;
+  function starsForAttempt(attempt) {
+    return attempt <= STARS_BY_ATTEMPT.length ? STARS_BY_ATTEMPT[attempt - 1] : 0;
   }
 
   // ---- small helpers ------------------------------------------------------
@@ -56,15 +51,14 @@
   function later(fn, ms) { var id = setTimeout(fn, ms); timers.push(id); return id; }
   function clearTimers() { timers.forEach(clearTimeout); timers = []; }
 
-  // ---- progress (local only, no personal data) ----------------------------
-  var STARS_KEY = 'countplay.stars';
-  function loadStars() { try { return parseInt(localStorage.getItem(STARS_KEY), 10) || 0; } catch (e) { return 0; } }
-  function saveStars(n) { try { localStorage.setItem(STARS_KEY, String(n)); } catch (e) {} }
-  var stars = loadStars();
+  // ---- progress (this visit only, nothing stored) -------------------------
+  // The badge is a tally for the session, not a lifetime score: it starts at zero on
+  // every load. A number that only ever climbs stops meaning anything to a child.
+  var stars = 0;
 
   function awardStars(n) {
     if (n <= 0) return;
-    stars += n; saveStars(stars); SFX.star();
+    stars += n; SFX.star();
     var badge = document.querySelector('.star-count');
     if (badge) { badge.textContent = stars; badge.classList.remove('bump'); void badge.offsetWidth; badge.classList.add('bump'); }
   }
@@ -230,8 +224,7 @@
     clearTimers();
     var me = ++gen;
     var q = randInt(0, 1) ? makeAdd() : makeTakeAway();
-    var clockAt = null;   // starts when the spoken question finishes
-    var missed = false;   // a wrong tap zeroes this question
+    var attempts = 0;     // taps so far; the first correct one is scored by this
 
     root.innerHTML =
       topbar(roundIndex) +
@@ -240,28 +233,23 @@
         choicesHTML(q.answer) +
       '</div>';
 
-    // The clock starts once the question has been read out, so listening to it never
-    // costs the child stars. audio.js calls back even when speech is unavailable.
-    speak(promptFor(q), null, function () {
-      if (me !== gen) return;
-      if (clockAt === null) clockAt = Date.now();
-    });
+    speak(promptFor(q));
 
     var buttons = root.querySelectorAll('.choice');
     Array.prototype.forEach.call(buttons, function (btn) {
       btn.addEventListener('click', function () {
-        if (btn.classList.contains('done')) return;
-        // Answering before the question finished is its own kind of fast.
-        if (clockAt === null) clockAt = Date.now();
+        if (btn.classList.contains('done') || btn.disabled) return;
+        attempts += 1;
 
         if (parseInt(btn.getAttribute('data-val'), 10) !== q.answer) {
-          missed = true;
-          btn.classList.remove('wrong'); void btn.offsetWidth; btn.classList.add('wrong');
+          // Retire the wrong choice so a double tap cannot burn a second attempt, and
+          // so the remaining buttons are always ones worth trying.
+          btn.classList.add('wrong'); btn.disabled = true;
           SFX.tryAgain(); speak(pick(RETRY));
           return;
         }
 
-        var earned = missed ? 0 : starsFor(Date.now() - clockAt);
+        var earned = starsForAttempt(attempts);
         roundStars += earned;
         Array.prototype.forEach.call(buttons, function (b) { b.classList.add('done'); b.disabled = true; });
         btn.classList.add('correct');
@@ -281,7 +269,7 @@
 
   function renderResults() {
     clearTimers(); gen++;
-    var best = ROUND * BANDS[0].stars;   // the most a perfect round can be worth
+    var best = ROUND * BEST_PER_QUESTION;   // the most a perfect round can be worth
     root.innerHTML =
       topbar(ROUND) +
       '<div class="screen results">' +
