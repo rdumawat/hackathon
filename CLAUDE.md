@@ -28,7 +28,7 @@ spec.
 | `app.js` | Question generation (Add, Take Away), the ten-question round, timing/scoring, screens |
 | `audio.js` | `window.SFX` (Web Audio effects) and `window.speak` (Web Speech) |
 | `styles.css` | Layout; `--tap: 96px` is the minimum touch-target size |
-| `sw.js` | Offline cache; bump `CACHE` version when shell files change |
+| `sw.js` | Offline cache, network-first with a 3s timeout; bump `CACHE` when shell files change |
 | `manifest.webmanifest`, `icon.svg` | Installability |
 | `serve.ps1` | Local static server for testing |
 
@@ -92,6 +92,12 @@ spec.
   `python -m http.server`; use `serve.ps1`. This is also why the app has zero dependencies.
 - **The service worker will not register over `file://`.** Opening `index.html` by double-click
   works for gameplay but silently skips offline/install behavior — serve over http to test that.
+- **`sw.js` is network-first, and must stay that way.** It was cache-first, which froze every
+  installed device on whatever it downloaded first: a pushed fix could not reach the child's iPad
+  without clearing website data by hand, and the app kept happily serving a stale build even while
+  GitHub Pages was unpublished. Network-first with a 3s timeout and a cache fallback keeps it
+  current and still fully offline. A device that installed a **cache-first** build (`v4` or older)
+  is stuck until its site data is cleared once — the fix cannot reach it, by definition.
 - **Audio needs a user gesture first.** Browsers block speech and Web Audio until a tap, which is
   what the opening ▶️ button is for. Do not remove it.
 - **Icons are generated from `icon.svg`.** `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`
