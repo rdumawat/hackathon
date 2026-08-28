@@ -43,8 +43,12 @@ spec.
   numbers stop being piles to count and become symbols to read. Addition keeps the sum inside
   two digits (`a` is drawn from `10..BIG_MAX - b`); subtraction cannot go negative for free,
   because a two-digit number always exceeds a one-digit one. The two-digit side is always first.
-- Scoring **40 or more** in a round (`PROMOTE`) moves the child to level two, for the rest of
-  that visit — nothing is stored, so a reload starts them at level one again.
+- Scoring **40 or more** in a round (`PROMOTE`) moves the child to level two **permanently** —
+  it is stored under `countplay.level` and survives a reload, because clearing level one is an
+  achievement and a child should not have to earn it again because the tablet went to sleep.
+  There is no way back down. The level is the **only** thing persisted; the star badge is
+  deliberately per-round (see below), and the obsolete `countplay.stars` key from older builds
+  is cleared on load.
 - Nothing requires reading: every prompt is spoken, and round position is drawn as pips rather
   than "3 of 10". Answer buttons show the numeral only — they used to carry a row of dots too,
   but that let a child count the objects on screen and match the button with the same number of
@@ -77,9 +81,11 @@ spec.
   telling a non-reading child which kind of question this is.
 - Timers belong to the screen that started them: `later()` registers them and every render calls
   `clearTimers()`. Bare `setTimeout` here will fire over whatever screen comes next.
-- No network calls, no accounts, no ads, no personal data. **Nothing is stored at all** — the
-  star badge is a tally for the current visit and starts at zero on every load, because a number
-  that only ever climbs stops meaning anything to a child. `localStorage` is no longer written.
+- The **star badge is the current round's score**, not a running total: it starts at zero every
+  round, including the first level-two one, so it reads as progress towards `PROMOTE`. A round
+  that falls short starts over from zero. It is never persisted.
+- No network calls, no accounts, no ads, no personal data. The only thing in `localStorage` is
+  `countplay.level` — a single digit, nothing about the child.
 
 ## Environment
 

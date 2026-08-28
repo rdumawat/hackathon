@@ -54,12 +54,24 @@
   function later(fn, ms) { var id = setTimeout(fn, ms); timers.push(id); return id; }
   function clearTimers() { timers.forEach(clearTimeout); timers = []; }
 
-  // ---- progress (this round only, nothing stored) -------------------------
+  // ---- progress -----------------------------------------------------------
   // The badge shows the round in progress and starts at zero every round — including
   // the first level-two round. So it reads as "how close am I to the 40 that opens the
   // next level", rather than a number that only ever climbs and stops meaning anything.
   // Fall short of PROMOTE and the next attempt starts from zero again.
   var roundStars = 0;
+
+  // The level is the one thing worth remembering. Clearing level one is an achievement
+  // and should survive a reload — a child who earned it should not have to earn it again
+  // because the tablet went to sleep. It is a single number and nothing about the child.
+  var LEVEL_KEY = 'countplay.level';
+  function loadLevel() {
+    try { return parseInt(localStorage.getItem(LEVEL_KEY), 10) === 2 ? 2 : 1; } catch (e) { return 1; }
+  }
+  function saveLevel(n) { try { localStorage.setItem(LEVEL_KEY, String(n)); } catch (e) {} }
+  // Older builds kept a lifetime star total. Nothing reads it now, so clear it rather
+  // than leave a dead key sitting on every device that ever ran one of those builds.
+  try { localStorage.removeItem('countplay.stars'); } catch (e) {}
 
   function awardStars(n) {
     if (n <= 0) return;
@@ -238,7 +250,7 @@
   // ===========================================================================
   var roundIndex = 0;   // questions finished so far this round
   var gen = 0;          // guards callbacks belonging to a question we have left
-  var level = 1;        // 2 once a round has scored PROMOTE; lasts for this visit only
+  var level = loadLevel();   // 2 once a round has scored PROMOTE, and it stays there
 
   function renderStart() {
     clearTimers(); gen++;
@@ -308,9 +320,9 @@
   function renderResults() {
     clearTimers(); gen++;
     var best = ROUND * BEST_PER_QUESTION;   // the most a perfect round can be worth
-    // Scoring PROMOTE moves the child up, and they stay there for the rest of the visit.
+    // Scoring PROMOTE moves the child up, and they stay there — across reloads too.
     var promoted = (level === 1 && roundStars >= PROMOTE);
-    if (promoted) level = 2;
+    if (promoted) { level = 2; saveLevel(2); }
 
     root.innerHTML =
       topbar(ROUND) +

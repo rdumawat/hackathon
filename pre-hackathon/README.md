@@ -50,8 +50,9 @@ tablet:
   Countable objects are emoji. Nothing is fetched at runtime.
 - **Offline install.** A service worker (`sw.js`) caches the app shell; a web manifest
   (`manifest.webmanifest`) makes it installable to a tablet home screen.
-- **Nothing stored.** The star tally is for the current visit and resets on reload. No accounts,
-  no storage, no data leaves the device.
+- **Almost nothing stored.** The star score is per round and resets every round. The one thing
+  kept is which level has been unlocked — clearing level one shouldn't have to be earned twice.
+  That's a single digit on the device. No accounts, no data leaves the device.
 - **Touch-first.** Large tap targets, no gestures beyond a single tap, zoom disabled.
 
 Files: `index.html`, `styles.css`, `app.js` (questions, round flow, scoring), `audio.js` (speech + effects),
@@ -66,7 +67,7 @@ Files: `index.html`, `styles.css`, `app.js` (questions, round flow, scoring), `a
 - Subtraction limited to problems with a result of zero or greater.
 - Spoken instructions, gentle sound effects, positive feedback.
 - Large touch targets and countable, colorful on-screen objects.
-- A star tally for the current visit, and a second level unlocked by scoring 40 or more.
+- A per-round star score, and a second level permanently unlocked by scoring 40 or more.
 
 **Explicitly out of scope**
 
@@ -94,8 +95,12 @@ powershell -ExecutionPolicy Bypass -File .\serve.ps1
 # then open http://localhost:8000/index.html
 ```
 
-On a tablet, browse to that URL over the same network (swap `localhost` for the machine's IP) and
-use the browser's **Add to Home Screen** to install it. Once installed it runs fully offline.
+**On a tablet:** open <https://rdumawat.github.io/hackathon/> in Safari and use **Share → Add to
+Home Screen**. Once installed it runs fully offline.
+
+`serve.ps1` will not do for this: it binds `localhost` only, so another device cannot reach it,
+and a service worker needs a secure context — which `http://<lan-ip>` is not — so even a
+LAN-reachable server would give gameplay without the offline install.
 
 **First tap:** the opening ▶️ button exists to unlock audio (mobile browsers require a tap before
 they will play sound or speak). Everything after that is driven by spoken prompts and pictures.
