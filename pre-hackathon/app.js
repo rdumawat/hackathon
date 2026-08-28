@@ -166,10 +166,12 @@
     return { type: 'add', theme: pick(THEMES), a: a, b: b, answer: a + b };
   }
 
-  // Never take away more than there are, so the answer is never negative.
+  // Never take away more than there are, so the answer is never negative. At least one is
+  // taken: "take away 0" is a non-question, and it would leave an empty group beside the
+  // minus sign the way an addend of 0 would beside the plus.
   function makeTakeAway() {
     var n = randInt(1, MAX);
-    var m = randInt(0, n);
+    var m = randInt(1, n);
     return { type: 'take', theme: pick(THEMES), n: n, m: m, answer: n - m };
   }
 
@@ -181,12 +183,22 @@
     '</div>';
   }
 
+  // Laid out like addition — two groups either side of the operator — so the two kinds of
+  // question read the same way. Left is everything you start with, right is how many go.
+  // The ones that leave are marked in the left group and fade once the prompt has been
+  // read, which is what shows the child that taking away means fewer than you began with.
   function takeBody(q) {
-    var s = '<div class="objects" style="--cols:' + cols(q.n) + '">';
-    for (var i = 0; i < q.n; i++) s += '<span class="obj' + (i >= q.n - q.m ? ' leaving' : '') + '">' + q.theme.emoji + '</span>';
-    s += '</div>';
-    return '<div class="groups single" style="--obj:' + objectSize(cols(q.n)) + '">' +
-      '<div class="group">' + s + '</div></div>';
+    var whole = '<div class="objects" style="--cols:' + cols(q.n) + '">';
+    for (var i = 0; i < q.n; i++) {
+      whole += '<span class="obj' + (i >= q.n - q.m ? ' leaving' : '') + '">' + q.theme.emoji + '</span>';
+    }
+    whole += '</div>';
+
+    return '<div class="groups" style="--obj:' + objectSize(cols(q.n) + cols(q.m)) + '">' +
+      '<div class="group">' + whole + '</div>' +
+      '<div class="op">➖</div>' +
+      '<div class="group taken">' + objectsHTML(q.m, q.theme.emoji) + '</div>' +
+    '</div>';
   }
 
   function promptFor(q) {

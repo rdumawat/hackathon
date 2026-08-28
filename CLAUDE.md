@@ -37,7 +37,7 @@ spec.
 - Whole non-negative numbers only, range 0..10 (`MAX`).
 - Addition keeps `a + b <= MAX` so the total stays countable on screen; both addends are at
   least 1, so the child always sees two real groups to join.
-- Subtraction draws the amount removed as `0..n`, so **the answer is never negative**.
+- Subtraction draws the amount removed as `1..n`, so **the answer is never negative**.
 - Nothing requires reading: every prompt is spoken, and round position is drawn as pips rather
   than "3 of 10". Answer buttons show the numeral only — they used to carry a row of dots too,
   but that let a child count the objects on screen and match the button with the same number of
@@ -56,7 +56,13 @@ spec.
 - Object groups use a fixed `--cols` grid, never free wrapping: up to four in a row, larger
   groups split into two balanced rows. Free wrapping made "8 + 2" render as 6, 2 and 2, with the
   operator beside the wrong cluster. `--obj` sizes art by the **widest row**, not the total, and
-  `.groups` is `nowrap` so the two addend groups can never stack.
+  `.groups` is `nowrap` so the two groups can never stack.
+- **Both question types render the same shape**: group, operator badge, group. Take Away shows
+  everything you start with on the left (with the departing ones marked `leaving`, fading after
+  the prompt) and how many go on the right, so subtraction is stated as `n ➖ m` rather than
+  silently deleting from one pile. The `.op` badge exists because the heavy-minus glyph is a thin
+  bar beside a bold cross for plus, and that symbol is the only cue telling a non-reading child
+  which kind of question this is.
 - Timers belong to the screen that started them: `later()` registers them and every render calls
   `clearTimers()`. Bare `setTimeout` here will fire over whatever screen comes next.
 - No network calls, no accounts, no ads, no personal data. Progress is a star count in
@@ -76,9 +82,12 @@ spec.
 
 ## Repository
 
-- Remote `origin` is `https://github.com/rdumawat/hackathon.git` (private).
-- Default branch is `main`. The remote branch does not exist yet, so the **first** push must
-  establish tracking: `git push -u origin main`. Subsequent pushes are plain `git push`.
+- Remote `origin` is `https://github.com/rdumawat/hackathon.git`. It is **public**, so that
+  GitHub Pages is free — treat everything committed here as published.
+- Published at `https://rdumawat.github.io/hackathon/` (Pages: branch `main`, folder `/ (root)`).
+  The app itself lives at `/pre-hackathon/`; the repo-root `index.html` redirects there so the
+  URL stays short enough to type on a tablet.
+- Default branch is `main`, tracking `origin/main`. Plain `git push`.
 - Commit identity is set **repo-locally**, not globally. There is no global `.gitconfig` on this
   machine — a newly cloned repo elsewhere will have no identity and will refuse to commit until
   one is set.
